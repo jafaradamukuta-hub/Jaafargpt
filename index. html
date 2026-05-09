@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="JafarGPT - Free AI Chat Assistant. Chat, learn, and edit images all in one place.">
+    <meta name="theme-color" content="#6C2BD9">
+    <title>JafarGPT - Free AI Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --surface: #1a1a1a;
+            --surface2: #242424;
+            --text: #ffffff;
+            --text2: #b0b0b0;
+            --primary: #7C3AED;
+            --primary2: #6D28D9;
+            --accent: #A78BFA;
+            --border: #333;
+            --user-bg: #2d1f5e;
+            --ai-bg: #1a1a1a;
+            --danger: #EF4444;
+            --success: #10B981;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--text);
+        }
+        .logo i {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--surface2);
+            border-radius: 10px;
+            padding: 4px;
+        }
+        .nav-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            background: transparent;
+            color: var(--text2);
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        .nav-tab:hover:not(.active) {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .main-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 260px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            flex-shrink: 0;
+        }
+        .new-chat-btn {
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            background: var(--surface2);
+            color: var(--text);
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .new-chat-btn:hover {
+            background: var(--border);
+        }
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .history-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text2);
+            transition: all 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .history-item:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+        .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .panel.hidden {
+            display: none;
+        }
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .message.ai {
+            align-self: flex-start;
+        }
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .message.user .avatar {
+            background: var(--primary);
+            color: white;
+        }
+        .message.ai .avatar {
+            background: var(--surface2);
+            color: var(--primary);
+        }
+        .msg-content {
+            background: var(--ai-bg);
+            padding: 12px 16px;
+            border-radius: 16px;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+        .message.user .msg-content {
+            background: var(--user-bg);
+            border-color: var(--primary);
+        }
+        .msg-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .message:hover .msg-actions {
+            opacity: 1;
+        }
+        .msg-actions button {
+            background: none;
+            border: none;
+            color: var(--text2);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+        .msg-actions button:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text2);
+            animation: bounce 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes bounce {
+            0%,
+            80%,
+            100% {
+                transform: scale(0.6);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+        .input-area {
+            padding: 16px 20px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            background: var(--surface2);
+            border-radius: 16px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            transition: border-color 0.2s;
+        }
+        .input-wrapper:focus-within {
+            border-color: var(--primary);
+        }
+        .input-wrapper textarea {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: none;
+            outline: none;
+            max-height: 150px;
+            padding: 6px 0;
+            line-height: 1.5;
+        }
+        .input-wrapper textarea::placeholder {
+            color: #666;
+        }
+        .send-btn {
+            background: var(--primary);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .send-btn:hover {
+            background: var(--primary2);
+            transform: scale(1.05);
+        }
+        .send-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .stop-btn {
+            background: var(--danger);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: inherit;
+            display: none;
+        }
+        .stop-btn.visible {
+            display: inline-block;
+        }
+        .suggestions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .suggestion-chip {
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text2);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .suggestion-chip:hover {
+            border-color: var(--primary);
+            color: var(--text);
+        }
+        .image-editor {
+            padding: 30px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            max-width: 500px;
+        }
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(124, 58, 237, 0.05);
+        }
+        .upload-zone i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+        .upload-zone p {
+            color: var(--text2);
+        }
+        .editor-workspace {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            gap: 20px;
+        }
+        .editor-workspace.active {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+        @media (max-width: 700px) {
+            .editor-workspace.active {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                display: none;
+            }
+        }
+        .editor-preview {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface2);
+        }
+        .editor-preview img {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+        }
+        .editor-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .editor-controls label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text2);
+        }
+        .editor-controls input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+        }
+        .editor-controls select,
+        .editor-controls input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-sm {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            background: var(--surface2);
+            color: var(--text);
+            font-family: inherit;
+        }
+        .btn-sm:hover {
+            background: var(--border);
+        }
+        .btn-sm.primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .btn-sm.primary:hover {
+            background: var(--primary2);
+        }
+        .btn-sm.danger {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+        .hidden {
+            display: none !important;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .message {
+                max-width: 95%;
+            }
+            .header {
+                padding: 10px 14px;
+            }
+            .nav-tab {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-robot"></i> JafarGPT
+        </div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-panel="chat">💬 Chat</button>
+            <button class="nav-tab" data-panel="editor">🖼️ Image Editor</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <button class="new-chat-btn" onclick="newChat()"><i class="fas fa-plus"></i> New Chat</button>
+            <div class="history-list" id="historyList"></div>
+        </aside>
+
+        <div class="panel" id="chatPanel">
+            <div class="chat-area" id="chatArea">
+                <div class="message ai">
+                    <div class="avatar"><i class="fas fa-robot"></i></div>
+                    <div class="msg-content">
+                        <p>👋 Hello! I'm <strong>JafarGPT</strong>, your free AI assistant.</p>
+                        <p style="margin-top:6px;">I can chat with you, answer questions, and even edit images! How can I help you today?</p>
+                    </div>
+                </div>
+            </div>
+            <div class="input-area">
+                <div class="suggestions" id="suggestions">
+                    <button class="suggestion-chip" onclick="sendSuggestion('Tell me an Islamic story')">📖 Islamic story</button>
+                    <button class="suggestion-chip" onclick="sendSuggestion('Explain AI in simple terms')">🤖 What is AI?</button>
+                    <button class="suggestion-chip" onclick="sendSuggestion('Give me a motivational quote')">💪 Motivation</button>
+                    <button class="suggestion-chip" onclick="sendSuggestion('Write a short poem about hope')">✍️ Write a poem</button>
+                </div>
+                <div class="input-wrapper">
+                    <textarea id="userInput" rows="1" placeholder="Type your message here..." onkeydown="handleKeyDown(event)"></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
+                    <button class="stop-btn" id="stopBtn" onclick="stopGeneration()"><i class="fas fa-stop"></i> Stop</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel hidden" id="editorPanel">
+            <div class="image-editor">
+                <h2 style="margin-bottom:8px;">🖼️ Image Editor</h2>
+                <p style="color:var(--text2);margin-bottom:20px;">Upload an image and apply filters, crop, or add text</p>
+                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p><strong>Click to upload</strong> or drag & drop</p>
+                    <p style="font-size:0.8rem;">JPG, PNG, GIF, WebP</p>
+                </div>
+                <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+                <div class="editor-workspace" id="editorWorkspace">
+                    <div class="editor-preview" id="editorPreview">
+                        <img id="editorImage" src="" alt="Preview">
+                    </div>
+                    <div class="editor-controls">
+                        <div>
+                            <label>Filter</label>
+                            <select id="filterSelect" onchange="applyFilter()">
+                                <option value="none">None</option>
+                                <option value="grayscale">Grayscale</option>
+                                <option value="sepia">Sepia</option>
+                                <option value="invert">Invert</option>
+                                <option value="blur">Blur</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Brightness: <span id="brightnessVal">100</span>%</label>
+                            <input type="range" id="brightness" min="0" max="200" value="100" oninput="applyFilter()">
+                        </div>
+                        <div>
+                            <label>Contrast: <span id="contrastVal">100</span>%</label>
+                            <input type="range" id="contrast" min="0" max="200" value="100" oninput="applyFilter()">
+                        </div>
+                        <div>
+                            <label>Resize: <span id="resizeVal">100</span>%</label>
+                            <input type="range" id="resize" min="10" max="200" value="100" oninput="applyResize()">
+                        </div>
+                        <div>
+                            <label>Text Overlay</label>
+                            <input type="text" id="overlayText" placeholder="Enter text to add..." oninput="applyFilter()">
+                            <input type="color" id="textColor" value="#ffffff" onchange="applyFilter()" style="margin-top:4px;">
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn-sm primary" onclick="downloadImage()"><i class="fas fa-download"></i> Download</button>
+                            <button class="btn-sm danger" onclick="resetEditor()"><i class="fas fa-undo"></i> Reset</button>
+                            <button class="btn-sm" onclick="document.getElementById('imageInput').click()"><i class="fas fa-upload"></i> New Image</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== APP STATE ====================
+        let messages = [];
+        let isGenerating = false;
+        let stopRequested = false;
+        let currentChatId = Date.now();
+        let chatHistory = {};
+        let originalImage = null;
+        let currentFilter = 'none';
+        let currentBrightness = 100;
+        let currentContrast = 100;
+        let currentResize = 100;
+        let overlayText = '';
+        let textColor = '#ffffff';
+
+        // ==================== DOM ELEMENTS ====================
+        const chatArea = document.getElementById('chatArea');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const suggestions = document.getElementById('suggestions');
+        const historyList = document.getElementById('historyList');
+        const chatPanel = document.getElementById('chatPanel');
+        const editorPanel = document.getElementById('editorPanel');
+        const editorWorkspace = document.getElementById('editorWorkspace');
+        const uploadZone = document.getElementById('uploadZone');
+        const editorImage = document.getElementById('editorImage');
+        const editorPreview = document.getElementById('editorPreview');
+
+        // ==================== NAVIGATION ====================
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const panel = tab.dataset.panel;
+                if (panel === 'chat') {
+                    chatPanel.classList.remove('hidden');
+                    editorPanel.classList.add('hidden');
+                } else {
+                    chatPanel.classList.add('hidden');
+                    editorPanel.classList.remove('hidden');
+                }
+            });
+        });
+
+        // ==================== CHAT FUNCTIONS ====================
+        function newChat() {
+            if (messages.length > 0) {
+                chatHistory[currentChatId] = [...messages];
+            }
+            currentChatId = Date.now();
+            messages = [];
+            chatArea.innerHTML = `
+            <div class="message ai">
+              <div class="avatar"><i class="fas fa-robot"></i></div>
+              <div class="msg-content">
+                <p>👋 Hello! I'm <strong>JafarGPT</strong>, your free AI assistant.</p>
+                <p style="margin-top:6px;">I can chat with you, answer questions, and even edit images! How can I help you today?</p>
+              </div>
+            </div>`;
+            suggestions.classList.remove('hidden');
+            updateHistoryList();
+        }
+
+        function sendSuggestion(text) {
+            userInput.value = text;
+            sendMessage();
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text || isGenerating) return;
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            suggestions.classList.add('hidden');
+            stopRequested = false;
+            addMessage('user', text);
+            isGenerating = true;
+            sendBtn.disabled = true;
+            stopBtn.classList.add('visible');
+            const aiMsgId = addMessage('ai', '', true);
+            const typingDiv = document.getElementById('typing-' + aiMsgId);
+            try {
+                const response = await generateResponse(text, (chunk) => {
+                    if (stopRequested) return;
+                    if (typingDiv) typingDiv.remove();
+                    const msgDiv = document.getElementById('msg-' + aiMsgId);
+                    if (msgDiv) {
+                        msgDiv.textContent += chunk;
+                        chatArea.scrollTop = chatArea.scrollHeight;
+                    }
+                });
+                if (stopRequested && typingDiv) typingDiv.remove();
+                if (!stopRequested) {
+                    const msgDiv = document.getElementById('msg-' + aiMsgId);
+                    if (msgDiv && !msgDiv.textContent.trim()) {
+                        msgDiv.textContent = response;
+                    }
+                    finalizeMessage(aiMsgId);
+                } else {
+                    const msgDiv = document.getElementById('msg-' + aiMsgId);
+                    if (msgDiv && !msgDiv.textContent.trim()) {
+                        msgDiv.textContent = '[Response cancelled]';
+                    }
+                    finalizeMessage(aiMsgId);
+                }
+            } catch (err) {
+                if (typingDiv) typingDiv.remove();
+                const msgDiv = document.getElementById('msg-' + aiMsgId);
+                if (msgDiv) msgDiv.textContent = 'Sorry, an error occurred. Please try again.';
+                finalizeMessage(aiMsgId);
+            }
+            isGenerating = false;
+            sendBtn.disabled = false;
+            stopBtn.classList.remove('visible');
+            chatArea.scrollTop = chatArea.scrollHeight;
+            updateHistoryList();
+        }
+
+        function stopGeneration() {
+            stopRequested = true;
+            isGenerating = false;
+            sendBtn.disabled = false;
+            stopBtn.classList.remove('visible');
+        }
+
+        function addMessage(role, content, isStreaming = false) {
+            const id = Date.now() + Math.random();
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            div.id = 'row-' + id;
+            const avatarIcon = role === 'user' ? 'fa-user' : 'fa-robot';
+            div.innerHTML = `
+            <div class="avatar"><i class="fas ${avatarIcon}"></i></div>
+            <div class="msg-content" id="msg-${id}">${isStreaming ? '<div class="typing-indicator" id="typing-' + id + '"><span></span><span></span><span></span></div>' : escapeHtml(content)}</div>
+            ${role === 'ai' && !isStreaming ? `
+            <div class="msg-actions">
+              <button onclick="copyMessage('${id}')" title="Copy"><i class="fas fa-copy"></i> Copy</button>
+              <button onclick="regenerateMessage('${id}')" title="Regenerate"><i class="fas fa-redo"></i> Regenerate</button>
+            </div>` : ''}
+          `;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            if (!isStreaming) {
+                messages.push({ id, role, content });
+            }
+            return id;
+        }
+
+        function finalizeMessage(id) {
+            const msgDiv = document.getElementById('msg-' + id);
+            if (!msgDiv) return;
+            const content = msgDiv.textContent.trim();
+            messages.push({ id, role: 'ai', content });
+            const rowDiv = document.getElementById('row-' + id);
+            if (rowDiv && !rowDiv.querySelector('.msg-actions')) {
+                const actions = document.createElement('div');
+                actions.className = 'msg-actions';
+                actions.innerHTML = `
+              <button onclick="copyMessage('${id}')" title="Copy"><i class="fas fa-copy"></i> Copy</button>
+              <button onclick="regenerateMessage('${id}')" title="Regenerate"><i class="fas fa-redo"></i> Regenerate</button>`;
+                rowDiv.appendChild(actions);
+            }
+        }
+
+        function copyMessage(id) {
+            const msgDiv = document.getElementById('msg-' + id);
+            if (!msgDiv) return;
+            navigator.clipboard.writeText(msgDiv.textContent).then(() => {
+                showToast('Copied! ✅');
+            });
+        }
+
+        function regenerateMessage(id) {
+            const idx = messages.findIndex(m => m.id == id);
+            if (idx > 0 && messages[idx - 1].role === 'user') {
+                const prompt = messages[idx - 1].content;
+                messages = messages.slice(0, idx - 1);
+                const rowDiv = document.getElementById('row-' + id);
+                const prevRow = rowDiv?.previousElementSibling;
+                if (rowDiv) rowDiv.remove();
+                if (prevRow) prevRow.remove();
+                userInput.value = prompt;
+                sendMessage();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==================== AI RESPONSE GENERATOR ====================
+        async function generateResponse(prompt, onChunk) {
+            const lowerPrompt = prompt.toLowerCase();
+            let response = '';
+            if (lowerPrompt.includes('islamic') || lowerPrompt.includes('allah') || lowerPrompt.includes('quran') ||
+                lowerPrompt.includes('prophet') || lowerPrompt.includes('muhammad') || lowerPrompt.includes('surah')) {
+                response = getIslamicResponse(prompt);
+            } else if (lowerPrompt.includes('poem') || lowerPrompt.includes('poetry')) {
+                response =
+                    "In fields of gold where dreams take flight,\nA gentle breeze in morning light.\nHope whispers softly through the trees,\nCarrying promises on the breeze.\n\nWhen darkness falls and doubts appear,\nRemember: morning's always near.\nFor every heart that dares to cope,\nThere blooms a garden full of hope.\n\n— JafarGPT ✨";
+            } else if (lowerPrompt.includes('story')) {
+                response =
+                    "📖 **A Story of Kindness**\n\nOnce in a small village, there lived an old man who planted date palms every day. A young boy asked him, 'Why do you plant trees you'll never sit under the shade of?'\n\nThe old man smiled and replied, 'I sit under the shade of trees planted by those before me. Now I plant for those who come after.'\n\nThis is the beautiful cycle of kindness — it echoes through generations. Every good deed you do today is a seed for tomorrow. 🌱";
+            } else if (lowerPrompt.includes('motivat') || lowerPrompt.includes('quote')) {
+                response =
+                    '💪 **Your Daily Motivation**\n\n"The only person you should try to be better than is the person you were yesterday."\n\nEvery dawn brings a new opportunity. Every challenge is a stepping stone. Every failure is a lesson. Keep moving forward — your future self is cheering for you! 🚀';
+            } else if (lowerPrompt.includes('ai') || lowerPrompt.includes('artificial intelligence')) {
+                response =
+                    "🤖 **What is AI?**\n\nArtificial Intelligence (AI) is like teaching computers to think and learn — similar to how humans do!\n\nThink of it as a smart assistant that can:\n• 📚 Learn from data and examples\n• 🗣️ Understand and respond to language\n• 👁️ Recognize images and patterns\n• 🎯 Make predictions and decisions\n\nAI powers things like voice assistants, recommendation systems, self-driving cars, and yes — chatbots like me, JafarGPT!\n\nIt's not magic — it's math, data, and clever programming working together. ✨";
+            } else if (lowerPrompt.includes('joke') || lowerPrompt.includes('funny')) {
+                response =
+                    "😂 Sure! Here's a tech joke:\n\nWhy do programmers prefer dark mode?\n\nBecause light attracts bugs! 🐛💡\n\nWant another one? 😄";
+            } else if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi') || lowerPrompt.includes('salaam') ||
+                lowerPrompt.includes('hey')) {
+                response =
+                    "Wa Alaikum As-Salaam! 👋\n\nI'm JafarGPT, your AI assistant. I'm here to help with:\n• 💬 Answering questions\n• 📚 Islamic knowledge\n• 🖼️ Image editing\n• ✍️ Writing & creativity\n• 💡 Ideas and advice\n\nWhat would you like to explore today?";
+            } else {
+                response =
+                    `Thanks for asking! Here's my response to: "${prompt}"\n\nI'm JafarGPT, a free AI assistant built to help you with questions, creative writing, learning, and more. While I'm running in demo mode right now, I can still provide helpful responses on many topics!\n\n**Here are some things I'm great at:**\n• Explaining concepts clearly\n• Writing poems and stories\n• Sharing Islamic knowledge\n• Providing motivation and advice\n• Answering general questions\n\nFeel free to ask me anything else! 🚀\n\n*To unlock full AI capabilities, add a Google Gemini API key in the code.*`;
+            }
+            const words = response.split(' ');
+            let streamed = '';
+            for (const word of words) {
+                if (stopRequested) break;
+                streamed += word + ' ';
+                onChunk(word + ' ');
+                await new Promise(r => setTimeout(r, 15 + Math.random() * 25));
+            }
+            return response;
+        }
+
+        function getIslamicResponse(prompt) {
+            const responses = [
+                "🕌 **Islamic Wisdom**\n\n\"Indeed, Allah does not change the condition of a people until they change what is in themselves.\" — Quran 13:11\n\nThis beautiful verse reminds us that positive change starts from within. Every step towards goodness is blessed.",
+                "🌟 **A Beautiful Hadith**\n\nThe Prophet Muhammad (ﷺ) said: \"The best among you are those who learn the Quran and teach it.\" — Sahih Al-Bukhari\n\nKnowledge is light. Share it generously!",
+                "🤲 **The Power of Dua**\n\n\"And your Lord says, 'Call upon Me; I will respond to you.'\" — Quran 40:60\n\nNever underestimate the power of sincere supplication. Allah is always listening.",
+                "✨ **Golden Advice**\n\n\"Speak good or remain silent.\" — Prophet Muhammad (ﷺ)\n\nWords have power. Choose them wisely. A kind word is charity.",
+            ];
+            const random = responses[Math.floor(Math.random() * responses.length)];
+            return random + "\n\n*I hope this brings benefit. Feel free to ask more Islamic questions!* 🕌";
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+            position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--success);
+            color:white;padding:12px 24px;border-radius:25px;z-index:9999;font-weight:600;
+            animation:fadeIn 0.3s ease;pointer-events:none;
+          `;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 2000);
+        }
+
+        // ==================== HISTORY ====================
+        function updateHistoryList() {
+            const allChats = { ...chatHistory };
+            if (messages.length > 0) allChats[currentChatId] = messages;
+            historyList.innerHTML = '';
+            Object.keys(allChats).slice(-10).reverse().forEach(chatId => {
+                const chat = allChats[chatId];
+                const firstMsg = chat.find(m => m.role === 'user');
+                const title = firstMsg ? firstMsg.content.substring(0, 30) + '...' : 'Empty chat';
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.textContent = title;
+                div.onclick = () => loadChat(chatId);
+                historyList.appendChild(div);
+            });
+        }
+
+        function loadChat(chatId) {
+            if (messages.length > 0) chatHistory[currentChatId] = [...messages];
+            currentChatId = chatId;
+            messages = chatHistory[chatId] || [];
+            chatArea.innerHTML = '';
+            suggestions.classList.add('hidden');
+            messages.forEach(m => {
+                const div = document.createElement('div');
+                div.className = `message ${m.role}`;
+                div.id = 'row-' + m.id;
+                const avatarIcon = m.role === 'user' ? 'fa-user' : 'fa-robot';
+                div.innerHTML = `
+              <div class="avatar"><i class="fas ${avatarIcon}"></i></div>
+              <div class="msg-content" id="msg-${m.id}">${escapeHtml(m.content)}</div>
+              ${m.role === 'ai' ? `
+              <div class="msg-actions">
+                <button onclick="copyMessage('${m.id}')" title="Copy"><i class="fas fa-copy"></i> Copy</button>
+                <button onclick="regenerateMessage('${m.id}')" title="Regenerate"><i class="fas fa-redo"></i> Regenerate</button>
+              </div>` : ''}`;
+                chatArea.appendChild(div);
+            });
+            chatArea.scrollTop = chatArea.scrollHeight;
+            updateHistoryList();
+        }
+
+        // ==================== IMAGE EDITOR ====================
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                originalImage = new Image();
+                originalImage.onload = function() {
+                    uploadZone.style.display = 'none';
+                    editorWorkspace.classList.add('active');
+                    resetEditorSettings();
+                    applyFilter();
+                };
+                originalImage.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function applyFilter() {
+            if (!originalImage) return;
+            const filter = document.getElementById('filterSelect').value;
+            const brightness = document.getElementById('brightness').value;
+            const contrast = document.getElementById('contrast').value;
+            const text = document.getElementById('overlayText').value;
+            const color = document.getElementById('textColor').value;
+            document.getElementById('brightnessVal').textContent = brightness;
+            document.getElementById('contrastVal').textContent = contrast;
+            const canvas = document.createElement('canvas');
+            canvas.width = originalImage.width;
+            canvas.height = originalImage.height;
+            const ctx = canvas.getContext('2d');
+            let filterStr = '';
+            if (filter === 'grayscale') filterStr += 'grayscale(100%) ';
+            if (filter === 'sepia') filterStr += 'sepia(100%) ';
+            if (filter === 'invert') filterStr += 'invert(100%) ';
+            if (filter === 'blur') filterStr += 'blur(3px) ';
+            filterStr += `brightness(${brightness}%) contrast(${contrast}%)`;
+            ctx.filter = filterStr;
+            ctx.drawImage(originalImage, 0, 0);
+            if (text) {
+                ctx.filter = 'none';
+                ctx.font = `${Math.max(20, originalImage.width / 15)}px Inter, sans-serif`;
+                ctx.fillStyle = color;
+                ctx.textAlign = 'center';
+                ctx.fillText(text, canvas.width / 2, canvas.height - 40);
+            }
+            editorImage.src = canvas.toDataURL('image/png');
+        }
+
+        function applyResize() {
+            if (!originalImage) return;
+            const resize = document.getElementById('resize').value;
+            document.getElementById('resizeVal').textContent = resize;
+            const scale = resize / 100;
+            editorImage.style.width = (originalImage.width * scale) + 'px';
+            editorImage.style.height = 'auto';
+        }
+
+        function resetEditorSettings() {
+            document.getElementById('filterSelect').value = 'none';
+            document.getElementById('brightness').value = 100;
+            document.getElementById('contrast').value = 100;
+            document.getElementById('resize').value = 100;
+            document.getElementById('overlayText').value = '';
+            document.getElementById('textColor').value = '#ffffff';
+            document.getElementById('brightnessVal').textContent = '100';
+            document.getElementById('contrastVal').textContent = '100';
+            document.getElementById('resizeVal').textContent = '100';
+            editorImage.style.width = '';
+            editorImage.style.height = '';
+            applyFilter();
+        }
+
+        function resetEditor() {
+            resetEditorSettings();
+            showToast('Editor reset! 🔄');
+        }
+
+        function downloadImage() {
+            if (!editorImage.src || editorImage.src === window.location.href) {
+                showToast('No image to download! ⚠️');
+                return;
+            }
+            const link = document.createElement('a');
+            link.download = 'jafargpt-edited-image.png';
+            link.href = editorImage.src;
+            link.click();
+            showToast('Image downloaded! 📥');
+        }
+
+        // Drag and drop for upload zone
+        uploadZone.addEventListener('dragover', (e) => { e.preventDefault();
+            uploadZone.style.borderColor = 'var(--primary)'; });
+        uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = 'var(--border)'; });
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.style.borderColor = 'var(--border)';
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                document.getElementById('imageInput').files = dt.files;
+                handleImageUpload({ target: { files: dt.files } });
+            }
+        });
+
+        // Auto-resize textarea
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        // Initial setup
+        updateHistoryList();
+        console.log('🚀 JafarGPT Ready!');
+        console.log('💬 Free AI Chat | 🖼️ Image Editor');
+        console.log('👋 Hello from JafarGPT!');
+    </script>
+</body>
+</html>
